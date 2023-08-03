@@ -62,7 +62,7 @@ const login = async (req, res) => {
         user,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "10s" }
+      { expiresIn: "15m" }
     );
     const refreshToken = jwt.sign({ user }, process.env.JWT_SECRET, {
       expiresIn: "7d",
@@ -116,7 +116,7 @@ const refresh = async (req, res) => {
           user,
         },
         process.env.JWT_SECRET,
-        { expiresIn: "10s" }
+        { expiresIn: "15m" }
       );
       res.json({ accessToken });
     });
@@ -126,4 +126,6 @@ const refresh = async (req, res) => {
   }
 };
 
-module.exports = { refresh, register, login, logout };
+const changePassword = async (req, res) => {};
+
+module.exports = { refresh, register, login, logout, changePassword };
