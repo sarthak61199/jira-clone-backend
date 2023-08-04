@@ -1,4 +1,5 @@
 const express = require("express");
+const verifyToken = require("../middleware/verifyToken.js");
 
 const router = express.Router();
 
@@ -14,6 +15,6 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/refresh", refresh);
-router.put("/changePassword", changePassword);
+router.put("/changePassword", verifyToken, changePassword);
 
 module.exports = router;

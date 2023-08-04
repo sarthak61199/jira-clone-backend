@@ -42,16 +42,16 @@ const login = async (req, res) => {
       email,
     ]);
     if (users.length === 0) {
-      return res.status(404).json({ message: "Wrong email or password" });
+      return res.status(400).json({ message: "Wrong email or password" });
     }
     const user = users[0];
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
-      return res.status(404).json({ message: "Wrong email or password" });
+      return res.status(400).json({ message: "Wrong email or password" });
     }
     if (!user.isActive) {
       return res
-        .status(404)
+        .status(400)
         .json({ message: "You are account has been deactivated" });
     }
     delete user.password;
@@ -108,7 +108,7 @@ const refresh = async (req, res) => {
         [decoded?.user?.email]
       );
       if (users.length === 0) {
-        return res.status(401).json({ message: "Wrong email or password" });
+        return res.status(400).json({ message: "Wrong email or password" });
       }
       const user = users[0];
       const accessToken = jwt.sign(
@@ -126,6 +126,35 @@ const refresh = async (req, res) => {
   }
 };
 
-const changePassword = async (req, res) => {};
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmNewPassword } = req.body;
+  if (!currentPassword || !newPassword || !confirmNewPassword) {
+    return res.status(404).json({ message: "All fields are required" });
+  }
+  if (newPassword !== confirmNewPassword) {
+    return res
+      .status(400)
+      .json({ message: "New Password and Confirm New Password don't match" });
+  }
+  try {
+    const client = await connectToDb();
+    const userId = req.user.user.id;
+    const [resp] = await client.query(
+      "select password from users where id = (?)",
+      [userId]
+    );
+    const password = resp[0].password;
+    const isPasswordCorrect = await bcrypt.compare(currentPassword, password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ message: "Current Password is wrong" });
+    }
+    const newHashPassword = await bcrypt.hash(newPassword, 10);
+    await client.query("update users set password = (?)", [newHashPassword]);
+    return res.status(201).json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 module.exports = { refresh, register, login, logout, changePassword };

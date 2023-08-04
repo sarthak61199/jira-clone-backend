@@ -9,7 +9,6 @@ const {
 const router = express.Router();
 
 router.get("/", verifyToken, getAllUsers);
-router.post("/changePassword");
 router.delete("/:userId", deleteUser);
 
 module.exports = router;
