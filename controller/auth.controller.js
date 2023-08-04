@@ -149,7 +149,10 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ message: "Current Password is wrong" });
     }
     const newHashPassword = await bcrypt.hash(newPassword, 10);
-    await client.query("update users set password = (?)", [newHashPassword]);
+    await client.query("update users set password = (?) where id = (?)", [
+      newHashPassword,
+      userId,
+    ]);
     return res.status(201).json({ message: "Password changed successfully" });
   } catch (err) {
     console.log(err);
