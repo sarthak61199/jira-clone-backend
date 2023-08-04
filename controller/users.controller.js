@@ -15,21 +15,37 @@ const getAllUsers = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
-  const user = req.user.user;
-  if (!user.roles.includes(ROLES.ADMIN) || !user.isActive) {
-    return res.status(403).json({ message: "You are not an admin" });
+  const { id } = req.params;
+  if (!id) {
+    return res.status(404).json({ message: "All fields are required" });
   }
-  const { userId } = req.params;
   try {
-    const resp = await client.query(
-      "select assignee, name, email, isActive from jira.users"
-    );
-    const users = resp.rows;
-    res.status(200).json({ users });
+    const client = await connectToDb();
+    const [users] = await client.query("select id from users where id = (?)", [
+      id,
+    ]);
+    if (users.length === 0) {
+      return res.status(400).json({ message: "User does't exist" });
+    }
+    await client.query("update users set isActive = 0 where id = (?)", [id]);
+    res.status(200).json({ message: "User deactivated successfully" });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Something went wrong" });
   }
 };
 
-module.exports = { getAllUsers, deleteUser };
+const getStatsById = async (req, res) => {
+  try {
+    const client = await connectToDb();
+    const [issues] = await client.query(
+      "select issues.id, issues.assignee, title, description, progress, priority, createdAt, updatedAt, name from issues inner join users on issues.assignee = users.id order by id"
+    );
+    return res.status(200).json({ issues });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { getAllUsers, deleteUser, getStatsById };

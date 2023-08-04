@@ -70,13 +70,22 @@ const getIssueById = async (req, res) => {
   }
 };
 
-const getStatsById = async (req, res) => {
+const getProgressList = async (req, res) => {
   try {
     const client = await connectToDb();
-    const [issues] = await client.query(
-      "select issues.id, issues.assignee, title, description, progress, priority, createdAt, updatedAt, name from issues inner join users on issues.assignee = users.id order by id"
-    );
-    return res.status(200).json({ issues });
+    const [lkp_progress] = await client.query("select * from lkp_progress");
+    return res.status(200).json({ progressList: lkp_progress });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const getPriorityList = async (req, res) => {
+  try {
+    const client = await connectToDb();
+    const [lkp_priority] = await client.query("select * from lkp_priority");
+    return res.status(200).json({ priorityList: lkp_priority });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -88,5 +97,6 @@ module.exports = {
   getAllIssues,
   editIssue,
   getIssueById,
-  getStatsById,
+  getProgressList,
+  getPriorityList,
 };
